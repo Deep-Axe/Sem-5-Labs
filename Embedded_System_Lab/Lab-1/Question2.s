@@ -1,0 +1,20 @@
+	AREA RESET, DATA, READONLY
+	EXPORT __Vectors
+__Vectors
+	DCD 0x10000000
+	DCD Reset_Handler
+	ALIGN
+	AREA DeepCode, CODE, READONLY
+	ENTRY
+	EXPORT Reset_Handler
+Reset_Handler
+	LDR R0 ,= SRC
+	LDR R1, [R0]
+	LDR R2 ,= DSTN
+	STR R1, [R2]
+STOP B STOP
+SRC DCD 0x12345678
+	AREA DeepData, DATA, READWRITE
+DSTN DCD 0
+	END
+	
