@@ -1,0 +1,17 @@
+	AREA RESET, DATA, READONLY
+	EXPORT __Vectors
+__Vectors
+	DCD 0x10000000
+	DCD Reset_Handler
+	ALIGN
+	AREA DeepCode, CODE, READONLY
+	ENTRY
+	EXPORT Reset_Handler
+Reset_Handler
+	LDR R1 ,= 0xA134
+	LDR R2 ,= 8_10
+	MOV R3, R1
+	MOV R1, R2
+	MOV R2, R3
+STOP B STOP
+	END
