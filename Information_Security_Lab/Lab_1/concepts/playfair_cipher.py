@@ -37,7 +37,7 @@ def find_position(matrix, char):
     for row in range(5):
         if char in matrix[row]:
             return row, matrix[row].index(char)
-    return None
+    raise ValueError(f"Character '{char}' not found in matrix")
 
 
 def playfair_cipher(key, message, mode='encrypt'):
