@@ -1,4 +1,3 @@
- url=https://github.com/Deep-Axe/Sem-5-Labs/blob/0a3ce68e03e03ea4e48157112ed209c2192fe94c/Embedded_System_Lab/ESD_Lab_Proj/lcd_test.c
 #include <LPC17xx.h>
 #include <stdio.h>
 #include "lcd_msg.h"   // use the header/file you provided
@@ -98,7 +97,7 @@ static void keypad_init(void) {
 
 /* Scan keypad once; returns 0 if no key, or ASCII key char */
 static char keypad_scan_once(void) {
-    unsigned int row;
+    unsigned int row,col;
     unsigned int pin_read;
     char key = 0;
 
@@ -117,7 +116,7 @@ static char keypad_scan_once(void) {
         pin_read = LPC_GPIO0->FIOPIN & KEY_COLS_MASK;
 
         /* columns are active low; check each */
-        for (unsigned int col = 0; col < 4; col++) {
+        for (col = 0; col < 4; col++) {
             if (!(pin_read & (1 << (KEY_COL_SHIFT + col)))) {
                 key = keymap[row][col];
                 /* simple debounce: wait until released */
@@ -145,6 +144,7 @@ static char keypad_wait_key(void) {
 
 /* show selection menu after motion detected and return chosen user 1..3 or 0 for cancel */
 static int choose_user(void) {
+    char k;
     lcd_clear_display();
     lcd_set_cursor_first();
     lcd_puts((unsigned char *)"Which user?      "); // first line
@@ -152,8 +152,6 @@ static int choose_user(void) {
     lcd_puts((unsigned char *)"1:alice 2:bob    ");
     delay_lcd(200000);
 
-    /* Wait for single keypress 1/2/3 */
-    char k;
     while (1) {
         k = keypad_scan_once();
         if (k == '1' || k == '2' || k == '3') {
@@ -166,6 +164,8 @@ static int choose_user(void) {
 /* prompt and collect password up to maxlen. 'D' submits, 'E' deletes */
 static int collect_password(char *buf, int maxlen) {
     int len = 0;
+    int i;
+    char k;
     lcd_clear_display();
     lcd_set_cursor_first();
     lcd_puts((unsigned char *)"Enter pwd:       ");
@@ -176,7 +176,7 @@ static int collect_password(char *buf, int maxlen) {
     lcd_set_cursor_second();
 
     while (1) {
-        char k = keypad_wait_key();
+        k = keypad_wait_key();
 
         if (k == 'D') { // submit
             buf[len] = '\0';
@@ -189,13 +189,13 @@ static int collect_password(char *buf, int maxlen) {
                 /* update display */
                 /* move cursor to second line start then print stars and pad */
                 lcd_set_cursor_second();
-                for (int i = 0; i < len; i++) {
+                for (i = 0; i < len; i++) {
                     temp1 = '*';
                     lcd_data();
                     delay_lcd(10000);
                 }
                 /* clear remainder */
-                for (int i = len; i < 16; i++) {
+                for (i = len; i < 16; i++) {
                     temp1 = ' ';
                     lcd_data();
                     delay_lcd(5000);
@@ -212,7 +212,7 @@ static int collect_password(char *buf, int maxlen) {
                 if (len < maxlen) {
                     buf[len++] = k;
                     /* display '*' for each char */
-                    temp1 = '*';
+                    temp1 = k;
                     lcd_data();
                     delay_lcd(10000);
                 }
@@ -230,12 +230,12 @@ static int collect_password(char *buf, int maxlen) {
 /* compare entered password with stored */
 static int check_password_for_user(int user, const char *entered) {
     const char *stored = 0;
+    int i = 0;
     if (user == 1) stored = PWD_ALICE;
     else if (user == 2) stored = PWD_BOB;
     else if (user == 3) stored = PWD_CAROL;
     if (!stored) return 0;
     /* simple strcmp */
-    int i = 0;
     while (stored[i] || entered[i]) {
         if (stored[i] != entered[i]) return 0;
         i++;
@@ -275,17 +275,23 @@ int main(void)
                 lcd_clear_display();
                 lcd_set_cursor_first();
                 if (check_password_for_user(user, entered)) {
-                    lcd_puts((unsigned char *)"Access Granted   ");
+                    /* Success: show welcome on first line */
+                    lcd_puts((unsigned char *)"Welcome!         ");
                 } else {
-                    lcd_puts((unsigned char *)"Access Denied    ");
+                    /* Failure: show wrong password message */
+                    lcd_puts((unsigned char *)"Wrong Password   ");
                 }
                 delay_lcd(400000);
 
-                /* after result, show identity for a moment */
+                /* second line: show username on success, or hint on failure */
                 lcd_set_cursor_second();
-                if (user == 1) lcd_puts((unsigned char *)"User: alice      ");
-                else if (user == 2) lcd_puts((unsigned char *)"User: bob        ");
-                else if (user == 3) lcd_puts((unsigned char *)"User: carol      ");
+                if (check_password_for_user(user, entered)) {
+                    if (user == 1) lcd_puts((unsigned char *)"User: alice      ");
+                    else if (user == 2) lcd_puts((unsigned char *)"User: bob        ");
+                    else if (user == 3) lcd_puts((unsigned char *)"User: carol      ");
+                } else {
+                    lcd_puts((unsigned char *)"Try again        ");
+                }
                 delay_lcd(400000);
             }
         } else {
