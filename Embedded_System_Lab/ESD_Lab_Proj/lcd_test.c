@@ -1,123 +1,81 @@
-
 #include <LPC17xx.h>
-#include <stdio.h>
-#include "lcd_msg.h"    // use the provided LCD routines (lcd_init, lcd_puts, lcd_com, etc.)
+#include "lcd_msg.h"   // the header you provided (contains lcd_init, lcd_puts, lcd_com, clr_disp, delay_lcd, etc.)
 
-#define PIR_PIN  (1 << 15)      // P0.15 (PIR input)
-#define ADC_CHANNEL 0
-#define TEMP_THRESHOLD 30  // corresponds to ~30°C
-#define TEMP_ADJUST 50
-#define BYPASS_PIR 0
-#define BYPASS_PIR_VALUE 0
+#define PIR_PIN  (1U << 15) // P0.15
+#define LED_PIN  (1U << 5)  // P0.5
 
-void ADC_Init(void);
-uint16_t ADC_Read(void);
-void delay_ms(uint32_t ms);
-
-char msg_on1[]  = "INTRUSION: ";
-char msg_values[20];
-char msg_off1[] = "DETECTING: ";
-
-unsigned int i;
+unsigned long x;
 
 int main(void)
 {
-		int sumTemp = 0;
-		int tickrate=0;
-    int ifDetectedPIR=0;
-	  int ifDetectedTEMP=0;
-		uint16_t adc_value=0;
-		int temperature_c=0;
-	
     SystemInit();
     SystemCoreClockUpdate();
 
-    // Configure pins
-    LPC_PINCON->PINSEL0 = 0;   // P0.0–P0.15 as GPIO
-    LPC_PINCON->PINSEL1 = 0;
-	// PIR input
-	LPC_GPIO0->FIODIR &= ~PIR_PIN;  // PIR input
+    /* Ensure P0.15 is GPIO input and P0.5 is GPIO output.
+       lcd_init() configures P0.23-P0.28 for the LCD, so we only touch PIR and LED here. */
+    LPC_PINCON->PINSEL0 = 0;    // clear PINSEL0 (P0.0..P0.15) - safe default
+    LPC_PINCON->PINSEL1 = 0;    // clear PINSEL1 (P0.16..P0.31) - ensure P0.15 is GPIO
 
-	// Initialize LCD (use lcd_msg.h implementation)
-	lcd_init();
+    LPC_GPIO0->FIODIR |= LED_PIN;   // LED as output
+    LPC_GPIO0->FIODIR &= ~PIR_PIN;  // PIR as input
+    LPC_GPIO0->FIOCLR = LED_PIN;    // LED off
 
-	ADC_Init();
+    // Initialize the LCD (from your lcd_msg.h implementation)
+    lcd_init();
 
-	// Initial message on LCD (first line)
-	lcd_puts((unsigned char*)msg_off1);
+    // Simple sanity check: display a normal message first so you can confirm LCD works
+    temp1 = 0x80;     // first line
+    lcd_com();
+    delay_lcd(80000);
+    lcd_puts((unsigned char *)"LCD OK");   // short message to verify LCD
 
-    // Main loop
+    delay_lcd(200000); // leave message on screen for a short while
+
+    // Now enter PIR loop — show status on LCD and toggle LED
     while (1)
     {
-				sumTemp = 0;
-				tickrate = 0;
-			  while(tickrate<5){
-				  	adc_value = ADC_Read();
-					sumTemp = ((adc_value / 4095.0f) * 330.0f)- TEMP_ADJUST; // Vref is 3.3, so 3.3 * 100 = 330
-					delay_ms(1000);
-				  	tickrate +=1;
-				}
-				temperature_c = sumTemp/5;
-				if(temperature_c > TEMP_THRESHOLD){
-					ifDetectedTEMP = 1;
-				}
-				else{
-					ifDetectedTEMP = 0;
-				}
-        ifDetectedPIR = (LPC_GPIO0->FIOPIN & PIR_PIN) ? 1 : 0; // Normalize to 0 or 1
-				if(BYPASS_PIR){
-						ifDetectedPIR = BYPASS_PIR_VALUE;
-				}
-        if (ifDetectedTEMP & ifDetectedPIR) // Motion detected
+        x = LPC_GPIO0->FIOPIN & PIR_PIN;
+        if (x) // motion detected
         {
+            LPC_GPIO0->FIOSET = LED_PIN;
 
-      // Update LCD: INTRUSION
-      temp1 = 0x80; lcd_com();
-      lcd_puts((unsigned char*)msg_on1);
+            // Update LCD: LED ON / OBJECT YES
+            // Clear display first to avoid leftover characters
+            clr_disp();
+            delay_lcd(20000);
 
-      temp1 = 0xC0; lcd_com();
-      sprintf(msg_values,"TEMP %d PIR %d",temperature_c,ifDetectedPIR);
-      lcd_puts((unsigned char*)msg_values);
-      delay_lcd(50000);
-      delay_ms(10000);
-						
+            temp1 = 0x80; // first line
+            lcd_com();
+            delay_lcd(2000);
+            lcd_puts((unsigned char *)"LED:ON ");
+
+            temp1 = 0xC0; // second line
+            lcd_com();
+            delay_lcd(2000);
+            lcd_puts((unsigned char *)"OBJECT:YES");
         }
-        else // No motion
+        else // no motion
         {
-            // Update LCD: DETECTING << values
-      temp1 = 0x80; lcd_com();
-      lcd_puts((unsigned char*)msg_off1);
+            LPC_GPIO0->FIOCLR = LED_PIN;
 
-      temp1 = 0xC0; lcd_com();
-      sprintf(msg_values,"TEMP %d PIR %d",temperature_c,ifDetectedPIR);
-      lcd_puts((unsigned char*)msg_values);
+            // Update LCD: LED OFF / OBJECT NO
+            clr_disp();
+            delay_lcd(20000);
+
+            temp1 = 0x80; // first line
+            lcd_com();
+            delay_lcd(2000);
+            lcd_puts((unsigned char *)"LED:OFF");
+
+            temp1 = 0xC0; // second line
+            lcd_com();
+            delay_lcd(2000);
+            lcd_puts((unsigned char *)"OBJECT:NO ");
         }
+
         delay_lcd(50000);
     }
-		
+
+    // not reached
+    return 0;
 }
-
-
-void ADC_Init(void) {
-    LPC_PINCON->PINSEL1 &= ~(3 << 14);
-    LPC_PINCON->PINSEL1 |=  (1 << 14);   
-    LPC_SC->PCONP |= (1 << 12);          
-    LPC_ADC->ADCR = (1 << ADC_CHANNEL) | 
-                    (4 << 8) |           
-                    (1 << 21);           
-}
-
-uint16_t ADC_Read(void) {
-		uint16_t result;
-    LPC_ADC->ADCR |= (1 << 24);          
-    while ((LPC_ADC->ADGDR & (1U << 31)) == 0); 
-    result = (LPC_ADC->ADGDR >> 4) & 0xFFF; 
-    return result;
-}
-
-void delay_ms(uint32_t ms) {
-    uint32_t i, j;
-    for (i = 0; i < ms; i++)
-        for (j = 0; j < 5000; j++);
-}
-
