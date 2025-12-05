@@ -1,0 +1,38 @@
+[
+    {
+        "book_id": 6,
+        "user_id": 1,
+        "content": "Not a particularly great book unfortunately, many conceptual mistakes\r\n",
+        "sentiment": "Neutral"
+    },
+    {
+        "book_id": 1,
+        "user_id": 1,
+        "content": "Bad, shameful little book\r\n",
+        "sentiment": "Negative"
+    },
+    {
+        "book_id": 35,
+        "user_id": 4,
+        "content": "Loved the book, inspirational\r\n",
+        "sentiment": "Positive"
+    },
+    {
+        "book_id": 40,
+        "user_id": 4,
+        "content": "Not my kind of book, but i understand someone liking it\r\n",
+        "sentiment": "Positive"
+    },
+    {
+        "book_id": 4,
+        "user_id": 4,
+        "content": "great  book would recommend to absolute no one",
+        "sentiment": "Positive"
+    },
+    {
+        "book_id": 8,
+        "user_id": 4,
+        "content": "not a fan, bad book",
+        "sentiment": "Negative"
+    }
+]

@@ -1,0 +1,41 @@
+[
+    {
+        "id": 1,
+        "username": "deep-axe",
+        "password": "scrypt:32768:8:1$JHDuqonM5exHPX0J$84da141bf270c9c4cffd5254308e687a41cd5e01992d7fda16ffc61a4ffeeb241d5cf3c2a75a78f3d470a0f15ef4f6480dc90bb8ab91a9541856892dcd7710ff",
+        "role": "admin",
+        "history": [
+            2
+        ]
+    },
+    {
+        "id": 2,
+        "username": "dee_axe",
+        "password": "scrypt:32768:8:1$gxVEkJ2m3CJebQXh$18dd283fc31d606c684e4d259a0b92d2398f2b6df4f80ac8b8d7dd84b8f20336c777124614c5876ea9b0784b4465b4a6d50822e578f48beaf7f5fbc914d6f450",
+        "role": "student",
+        "history": []
+    },
+    {
+        "id": 3,
+        "username": "Fish-Lips",
+        "password": "scrypt:32768:8:1$JABM89WV2z231419$b2dc48124e8e3ad33a2a0d9cba0abf5e9fd8de5956c1c5b291751f8a3d783ecea77cd8dc1947792e26fd6fa9ad638b73088c2790e2793ce21fae0849055cf577",
+        "role": "student",
+        "history": []
+    },
+    {
+        "id": 4,
+        "username": "FishyLabiaLips",
+        "password": "scrypt:32768:8:1$G14MOdEz6vM166hb$b3f0be4081568c4ad6e7c894d938a5433fa4b5c274669d5b6c967a4277ef2f8900e85777f4bbbec2f2720136c1b2c930ea1280f0ce1459389ce625b64e436f5c",
+        "role": "student",
+        "history": [
+            6
+        ]
+    },
+    {
+        "id": 5,
+        "username": "DeepamAhuja",
+        "password": "scrypt:32768:8:1$jf6gXdfaUzS8qL7D$68a8d8f1a6340c346b123df91bee690da5dcf6dcb6da3ed4dbdd7b072cfe92747a1dd179df85898cfaa6758f19f4ed63c6e60c14e973618f826cc31ae1703ef0",
+        "role": "student",
+        "history": []
+    }
+]

@@ -1,0 +1,44 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">User Feedback & Reviews</h2>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      {% if reviews %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Book</th>
+              <th>User</th>
+              <th>Review Content</th>
+              <th>Sentiment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for review in reviews %}
+            <tr>
+              <td class="fw-bold">{{ review.book_title }}</td>
+              <td>{{ review.username }}</td>
+              <td>{{ review.content }}</td>
+              <td>
+                {% if review.sentiment == 'Positive' %}
+                <span class="badge bg-success">Positive</span>
+                {% elif review.sentiment == 'Negative' %}
+                <span class="badge bg-danger">Negative</span>
+                {% else %}
+                <span class="badge bg-secondary">Neutral</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-center text-muted my-5">No reviews submitted yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

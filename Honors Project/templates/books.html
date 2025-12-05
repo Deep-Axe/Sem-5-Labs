@@ -1,0 +1,166 @@
+{% extends 'base.html' %} {% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Library Books</h2>
+  {% if user.role == 'admin' %}
+  <button
+    class="btn btn-success"
+    data-bs-toggle="modal"
+    data-bs-target="#addBookModal"
+  >
+    Add Book
+  </button>
+  {% endif %}
+</div>
+
+<form action="{{ url_for('books') }}" method="GET" class="mb-4">
+  <div class="input-group">
+    <input
+      type="text"
+      class="form-control"
+      name="q"
+      placeholder="Search by title or author..."
+    />
+    <button class="btn btn-outline-secondary" type="submit">Search</button>
+  </div>
+</form>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Author</th>
+      <th>Genre</th>
+      <th>Status</th>
+      <th>Sentiment</th>
+      <th>Action</th>
+      <th>Review</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for book in books %}
+    <tr>
+      <td>{{ book.title }}</td>
+      <td>{{ book.author }}</td>
+      <td>{{ book.genre }}</td>
+      <td>
+        <span
+          class="badge bg-{{ 'success' if book.status == 'Available' else 'danger' }}"
+        >
+          {{ book.status }}
+        </span>
+      </td>
+      <td>
+        {% set sentiment = sentiments[book.id] %} {% if sentiment == 'Positive'
+        %}
+        <span class="badge bg-success">Positive 😊</span>
+        {% elif sentiment == 'Negative' %}
+        <span class="badge bg-danger">Negative 😞</span>
+        {% elif sentiment == 'Neutral' %}
+        <span class="badge bg-secondary">Neutral 😐</span>
+        {% elif sentiment == 'Mixed' %}
+        <span class="badge bg-warning text-dark">Mixed 🤔</span>
+        {% else %}
+        <span class="badge bg-light text-dark">No Reviews</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if book.status == 'Available' %}
+        <a
+          href="{{ url_for('issue_book', book_id=book.id) }}"
+          class="btn btn-sm btn-primary"
+          >Issue</a
+        >
+        {% elif book.issued_to == user.id %}
+        <a
+          href="{{ url_for('return_book', book_id=book.id) }}"
+          class="btn btn-sm btn-warning"
+          >Return</a
+        >
+        {% else %}
+        <button class="btn btn-sm btn-secondary" disabled>Issued</button>
+        {% endif %}
+      </td>
+      <td>
+        <button
+          class="btn btn-sm btn-info"
+          data-bs-toggle="modal"
+          data-bs-target="#reviewModal{{ book.id }}"
+        >
+          Review
+        </button>
+
+        <!-- Review Modal -->
+        <div class="modal fade" id="reviewModal{{ book.id }}" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Review {{ book.title }}</h5>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                ></button>
+              </div>
+              <div class="modal-body">
+                <form
+                  action="{{ url_for('add_review', book_id=book.id) }}"
+                  method="POST"
+                >
+                  <div class="mb-3">
+                    <label class="form-label"
+                      >Your Review (Sentiment Analysis will run)</label
+                    >
+                    <textarea
+                      class="form-control"
+                      name="content"
+                      rows="3"
+                      required
+                    ></textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary">
+                    Submit Review
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Add Book Modal -->
+<div class="modal fade" id="addBookModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Book</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form action="{{ url_for('add_book') }}" method="POST">
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input type="text" class="form-control" name="title" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Author</label>
+            <input type="text" class="form-control" name="author" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Genre</label>
+            <input type="text" class="form-control" name="genre" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Add Book</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
